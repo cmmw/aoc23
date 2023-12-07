@@ -1,13 +1,14 @@
-#include <iostream>
+#include <cstdint>
 #include <fstream>
+#include <iostream>
 #include <iterator>
-#include <unordered_map>
 #include <sstream>
+#include <unordered_map>
 
 const std::unordered_map<std::string, int32_t> limits{
-        {"red",   12},
-        {"green", 13},
-        {"blue",  14}
+    {"red", 12},
+    {"green", 13},
+    {"blue", 14},
 };
 
 void part1() {
@@ -46,7 +47,6 @@ void part1() {
     std::cout << sumIds << std::endl;
 }
 
-
 void part2() {
     std::ifstream ifs("../../2/input.txt");
     std::string line;
@@ -72,15 +72,14 @@ void part2() {
                 col.pop_back();
             currentCnt[col] += std::max(currentCnt[col], nr);
 
-            for (const auto &c: currentCnt)
+            for (const auto& c : currentCnt)
                 cnt[c.first] = std::max(cnt[c.first], c.second);
 
             if (done)
                 currentCnt.clear();
-
         }
         int32_t s{1};
-        for (const auto &c: cnt)
+        for (const auto& c : cnt)
             s *= c.second;
         sumIds += s;
     }

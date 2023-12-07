@@ -1,12 +1,14 @@
-#include <iostream>
+#include <algorithm>
+#include <cstdint>
 #include <fstream>
+#include <iostream>
 #include <iterator>
+#include <numeric>
 #include <sstream>
 #include <unordered_set>
 #include <vector>
-#include <numeric>
 
-std::pair<std::unordered_set<int32_t>, std::unordered_set<int32_t>> parseCard(const std::string &line) {
+std::pair<std::unordered_set<int32_t>, std::unordered_set<int32_t>> parseCard(const std::string& line) {
     std::stringstream ss(line);
     std::string tmp;
     int32_t gameId;
@@ -34,13 +36,13 @@ void part1() {
     std::string line;
     int64_t sum{};
     while (std::getline(ifs, line)) {
-        const auto &[w, nrs] = parseCard(line);
+        const auto& [w, nrs] = parseCard(line);
         const auto cnt = std::count_if(nrs.begin(), nrs.end(), [&](int32_t n) { return w.count(n) != 0; });
-        if (cnt) sum += (1 << (cnt - 1));
+        if (cnt)
+            sum += (1 << (cnt - 1));
     }
     std::cout << sum << std::endl;
 }
-
 
 void part2() {
     std::vector<int> copies(205, 1);
@@ -48,7 +50,7 @@ void part2() {
     std::string line;
     int32_t idx{};
     while (std::getline(ifs, line)) {
-        const auto &[w, nrs] = parseCard(line);
+        const auto& [w, nrs] = parseCard(line);
         const auto cnt = std::count_if(nrs.begin(), nrs.end(), [&](int32_t n) { return w.count(n) != 0; });
         if (cnt) {
             for (int i = 0; i < cnt; i++)
