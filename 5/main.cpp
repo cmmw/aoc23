@@ -1,9 +1,10 @@
+#include <algorithm>
 #include <cstdint>
 #include <fstream>
 #include <iostream>
 #include <iterator>
 #include <limits>
-#include <map>
+#include <list>
 #include <sstream>
 #include <unordered_map>
 #include <vector>
@@ -78,20 +79,61 @@ void part1() {
     std::cout << min << std::endl;
 }
 
+using Range = std::pair<int64_t, int64_t>;
+using Ranges = std::list<Range>;
+
+bool nextIntervals(int64_t dst, int64_t src, int64_t len, const Range& range, Ranges& current, Ranges& next) {
+    const auto rs = range.first;
+    const auto rl = range.second;
+
+    if (rs + rl <= src || rs >= src + len)
+        return false;
+
+    if (rs < src) {
+        if (rs + rl > src + len) {
+            // 4
+            next.emplace_back(dst, len);
+            current.emplace_back(rs, src - rs);
+            current.emplace_back(src + len, rs + rl - (src + len));
+        } else {
+            // 2
+            next.emplace_back(dst, rs + rl - src);
+            current.emplace_back(rs, src - rs);
+        }
+    } else if (rs + rl > src + len) {
+        // 3
+        next.emplace_back(dst + rs - src, len - (rs - src));
+        current.emplace_back(src + len, rs + rl - (src + len));
+    } else {
+        // 1
+        next.emplace_back(dst + (rs - src), rl);
+    }
+    return true;
+}
+
 void part2() {
     int64_t min = std::numeric_limits<int64_t>::max();
     const auto& [seeds, map] = parseInput();
-    for (const auto seed : seeds) {
-        int64_t next = seed;
+    for (int i = 0; i < seeds.size() - 1; i += 2) {
+        Ranges ranges{{seeds[i], seeds[i + 1]}};
         for (const auto cat : {Cat::Soil, Cat::Fertilizer, Cat::Water, Cat::Light, Cat::Temperature, Cat::Humidity, Cat::Location}) {
-            for (const auto& [dst, src, len] : map.at(cat)) {
-                if (src <= next && next < src + len) {
-                    next = dst + (next - src);
-                    break;
+            Ranges next;
+            while (!ranges.empty()) {
+                auto range = ranges.front();
+                ranges.pop_front();
+                bool processed = false;
+                for (const auto& [dst, src, len] : map.at(cat)) {
+                    processed |= nextIntervals(dst, src, len, range, ranges, next);
+                    if (processed)
+                        break;
                 }
+                if (!processed)
+                    next.emplace_back(range);
             }
+            next.swap(ranges);
         }
-        min = std::min(min, next);
+        const auto tmp = std::min_element(ranges.begin(), ranges.end(), [](const auto& range1, const auto& range2) { return range1.first < range2.first; });
+        min = std::min(min, tmp->first);
     }
     std::cout << min << std::endl;
 }
