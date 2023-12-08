@@ -41,6 +41,30 @@ void part1() {
 }
 
 void part2() {
+    Races races;
+    std::ifstream ifs("../../6/input.txt");
+    std::string line;
+    std::getline(ifs, line);
+    std::stringstream ss(line);
+    std::string tmp;
+    std::stringstream acc;
+    ss >> tmp;
+    while (ss >> tmp)
+        acc << tmp;
+    int64_t time;
+    acc >> time;
+    std::getline(ifs, line);
+    ss = std::stringstream(line);
+    ss >> tmp;
+    acc = std::stringstream();
+    while (ss >> tmp)
+        acc << tmp;
+    int64_t dist;
+    acc >> dist;
+    int32_t cnt{};
+    for (int i = 1; i < time; i++)
+        cnt += (time - i) * i > dist;
+    std::cout << cnt << std::endl;
 }
 
 int main() {
