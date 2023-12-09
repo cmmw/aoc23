@@ -37,10 +37,7 @@ void part1() {
     std::string node = "AAA";
     while (node != "ZZZ") {
         const auto& [left, right] = map.at(node);
-        if (cmd[idx] == 'L')
-            node = left;
-        else
-            node = right;
+        node = cmd[idx] == 'L' ? left : right;
         sum++;
         idx = (idx + 1) % cmd.size();
     }
@@ -66,10 +63,7 @@ void part2() {
         r++;
         for (auto& node : nodes) {
             const auto& [left, right] = map.at(node);
-            if (cmdLeft)
-                node = left;
-            else
-                node = right;
+            node = cmdLeft ? left : right;
             if (node.back() == 'Z' && rounds[i] == 0)
                 rounds[i] = r;
             i++;
