@@ -36,34 +36,42 @@ Instance parseInput() {
     return {galaxies, ex, ey};
 }
 
-int32_t dist(const Galaxies& galaxies, const Expand& ex, const Expand& ey, int32_t i, int32_t j) {
-    int32_t d{};
+int64_t dist(const Galaxies& galaxies, const Expand& ex, const Expand& ey, int32_t i, int32_t j, int64_t delta) {
+    int64_t d{};
     const auto& g1 = galaxies[i];
     const auto& g2 = galaxies[j];
     for (const auto e : ex) {
         if (e > std::min(g1.first, g2.first) && e < std::max(g1.first, g2.first))
-            d++;
+            d += delta;
     }
     for (const auto e : ey) {
         if (e > std::min(g1.second, g2.second) && e < std::max(g1.second, g2.second))
-            d++;
+            d += delta;
     }
     d += std::abs(g1.first - g2.first) + std::abs(g1.second - g2.second);
     return d;
 }
 
 void part1() {
-    int32_t sum{};
+    int64_t sum{};
     const auto& [galaxies, ex, ey] = parseInput();
     for (int i = 0; i < galaxies.size() - 1; i++) {
         for (int j = i + 1; j < galaxies.size(); j++) {
-            sum += dist(galaxies, ex, ey, i, j);
+            sum += dist(galaxies, ex, ey, i, j, 1);
         }
     }
     std::cout << sum << std::endl;
 }
 
 void part2() {
+    int64_t sum{};
+    const auto& [galaxies, ex, ey] = parseInput();
+    for (int i = 0; i < galaxies.size() - 1; i++) {
+        for (int j = i + 1; j < galaxies.size(); j++) {
+            sum += dist(galaxies, ex, ey, i, j, 999999);
+        }
+    }
+    std::cout << sum << std::endl;
 }
 
 int main() {
