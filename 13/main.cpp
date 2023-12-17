@@ -53,34 +53,63 @@ bool isVertMirrored(const Instance& instance, int32_t x, int32_t m) {
     return true;
 }
 
-int32_t mirror(const Instance& instance) {
+std::pair<std::vector<int>, std::vector<int>> getMirror(const Instance& instance, const std::vector<int>& exx = {}, const std::vector<int>& exy = {}) {
     const auto& [map, width, height] = instance;
-    std::vector<int> xs;
     std::vector<int> mxs(width - 1);
     std::iota(mxs.begin(), mxs.end(), 1);
-    for (int y = 0; y < height && !mxs.empty(); y++) {
-        mxs.erase(std::remove_if(mxs.begin(), mxs.end(), [&](int32_t m) { return !isHorMirrored(instance, y, m); }), mxs.end());
+    for (auto tmp : exx) {
+        auto [first, last] = std::ranges::remove(mxs, tmp);
+        mxs.erase(first, last);
     }
-    std::vector<int> ys;
+    for (int y = 0; y < height && !mxs.empty(); y++)
+        mxs.erase(std::remove_if(mxs.begin(), mxs.end(), [&](int32_t m) { return !isHorMirrored(instance, y, m); }), mxs.end());
     std::vector<int> mys(height - 1);
     std::iota(mys.begin(), mys.end(), 1);
-    for (int x = 0; x < width && !mys.empty(); x++) {
-        mys.erase(std::remove_if(mys.begin(), mys.end(), [&](int32_t m) { return !isVertMirrored(instance, x, m); }), mys.end());
+    for (auto tmp : exy) {
+        auto [first, last] = std::ranges::remove(mys, tmp);
+        mys.erase(first, last);
     }
+    for (int x = 0; x < width && !mys.empty(); x++)
+        mys.erase(std::remove_if(mys.begin(), mys.end(), [&](int32_t m) { return !isVertMirrored(instance, x, m); }), mys.end());
+    if (mxs.empty() && mys.empty())
+        return {};
     assert((mxs.size() == 1) != (mys.size() == 1));
-    return mxs.empty() ? (100 * mys[0]) : mxs[0];
+    return {mxs, mys};
 }
 
 void part1() {
     int64_t sum{};
     const auto& instances = parseInput();
-    for (const auto& instance : instances)
-        sum += mirror(instance);
+    for (const auto& instance : instances) {
+        const auto& [mxs, mys] = getMirror(instance);
+        assert((mxs.size() == 1) != (mys.size() == 1));
+        sum += (mxs.empty() ? (100 * mys[0]) : mxs[0]);
+    }
     std::cout << sum << std::endl;
 }
 
 void part2() {
     int64_t sum{};
+    auto instances = parseInput();
+    for (auto& instance : instances) {
+        const auto& [exx, exy] = getMirror(instance);
+        auto& [map, width, height] = instance;
+        for (int h = 0; h < height; h++) {
+            for (int w = 0; w < width; w++) {
+                const auto o = map[h * width + w];
+                if (o == '?')
+                    continue;
+                map[h * width + w] = (o == '.') ? '#' : '-';
+                const auto& [mxs, mys] = getMirror(instance, exx, exy);
+                map[h * width + w] = o;
+                if ((mxs.size() == 1) != (mys.size() == 1)) {
+                    sum += (mxs.empty() ? (100 * mys[0]) : mxs[0]);
+                    h = height;
+                    break;
+                }
+            }
+        }
+    }
     std::cout << sum << std::endl;
 }
 
