@@ -16,7 +16,7 @@ Map parseInput() {
         if (line.empty())
             continue;
         if (width == 0)
-            width = line.size();
+            width = static_cast<int32_t>(line.size());
         height++;
         map.insert(map.end(), line.begin(), line.end());
     }
@@ -35,7 +35,7 @@ Vec operator+(const Vec& v1, const Vec& v2) {
 }
 
 using Beam = std::pair<Vec, Vec>;
-using Beams = std::vector<Beam>;
+using Beams = std::set<Beam>;
 
 Beams updateBeam(const Map& map, const Beam& beam) {
     const auto& [pos, dir] = beam;
@@ -69,41 +69,55 @@ Beams updateBeam(const Map& map, const Beam& beam) {
     return {{pos, dir}};
 }
 
-using Tiles = std::set<Beam>;
-
-void advance(const Map& map, Beams& beams, Tiles& e) {
+Beams advance(const Map& map, const Beams& beams, Beams& e) {
+    Beams next;
     const auto& [m, width, height] = map;
     for (auto& [pos, dir] : beams)
-        pos = pos + dir;
-    beams.erase(std::remove_if(beams.begin(), beams.end(), [&](const Beam& b) {
-                    const auto& [pos, dir] = b;
-                    return pos.first < 0 || pos.first >= width || pos.second < 0 || pos.second >= height || e.contains(b);
-                }),
-                beams.end());
-    e.insert(beams.begin(), beams.end());
+        next.insert({pos + dir, dir});
+    erase_if(next, [&](const Beam& b) {
+        const auto& [pos, dir] = b;
+        return pos.first < 0 || pos.first >= width || pos.second < 0 || pos.second >= height || e.contains(b);
+    });
+    e.insert(next.begin(), next.end());
+    return next;
 }
 
-void part1() {
-    Tiles e;
+size_t fireBeam(const Map& map, const Vec& pos, const Vec& dir) {
+    Beams history;
     Beams beams;
-    beams.push_back({{}, {1, 0}});
-    e.insert(beams.begin(), beams.end());
-    const auto& map = parseInput();
+    beams.insert({pos, dir});
+    history.insert(beams.begin(), beams.end());
     while (!beams.empty()) {
         Beams tmp;
         for (const auto& beam : beams) {
             const auto& next = updateBeam(map, beam);
-            tmp.insert(tmp.end(), next.begin(), next.end());
+            tmp.insert(next.begin(), next.end());
         }
-        advance(map, tmp, e);
-        std::swap(tmp, beams);
+        beams = advance(map, tmp, history);
     }
     std::set<Vec> c;
-    std::ranges::transform(e, std::inserter(c, c.begin()), [](const Beam& b) { return b.first; });
-    std::cout << c.size() << std::endl;
+    std::ranges::transform(history, std::inserter(c, c.begin()), [](const Beam& b) { return b.first; });
+    return c.size();
+}
+
+void part1() {
+    const auto& map = parseInput();
+    std::cout << fireBeam(map, {0, 0}, {1, 0}) << std::endl;
 }
 
 void part2() {
+    const auto& map = parseInput();
+    const auto& [m, width, height] = map;
+    size_t e{};
+    for (int i = 0; i < width; i++) {
+        e = std::max(e, fireBeam(map, {i, 0}, {0, 1}));
+        e = std::max(e, fireBeam(map, {i, height - 1}, {0, -1}));
+    }
+    for (int i = 0; i < height; i++) {
+        e = std::max(e, fireBeam(map, {0, i}, {1, 0}));
+        e = std::max(e, fireBeam(map, {width - 1, i}, {-1, 0}));
+    }
+    std::cout << e << std::endl;
 }
 
 int main() {
