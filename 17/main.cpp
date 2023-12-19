@@ -1,4 +1,5 @@
 #include <algorithm>
+#include <cassert>
 #include <cstdint>
 #include <fstream>
 #include <iostream>
@@ -59,15 +60,15 @@ HeadVec next(const Map& map, const Head& current) {
     HeadVec heads;
     const auto& [m, width, height] = map;
     const auto& [pos, dir, c, s] = current;
-    for (Vec d : {Vec{1, 0}, {0, 1}, {-1, 0}, {0, -1}}) {
+    for (const Vec& d : {Vec{1, 0}, {0, 1}, {-1, 0}, {0, -1}}) {
         if (dir == -d)
             continue;
-        if (dir == d && s == 2)
+        if (dir == d && s == 3)
             continue;
         const auto& n = pos + d;
         if (n.first < 0 || n.first >= width || n.second < 0 || n.second >= height)
             continue;
-        heads.emplace_back(n, d, c + at(map, n), dir == d ? (s + 1) : 0);
+        heads.emplace_back(n, d, c + at(map, n), dir == d ? (s + 1) : 1);
     }
     return heads;
 }
@@ -95,7 +96,46 @@ void part1() {
     std::cout << v << std::endl;
 }
 
+HeadVec next2(const Map& map, const Head& current) {
+    HeadVec heads;
+    const auto& [m, width, height] = map;
+    const auto& [pos, dir, c, s] = current;
+    for (const Vec& d : {Vec{1, 0}, {0, 1}, {-1, 0}, {0, -1}}) {
+        if (dir == -d)
+            continue;
+        if (dir == d && s == 10)
+            continue;
+        if (dir != Vec{0, 0} && dir != d && s < 4)
+            continue;
+        const auto& n = pos + d;
+        if (n.first < 0 || n.first >= width || n.second < 0 || n.second >= height)
+            continue;
+        heads.emplace_back(n, d, c + at(map, n), dir == d ? (s + 1) : 1);
+    }
+    return heads;
+}
+
 void part2() {
+    int32_t v{};
+    const auto& map = parseInput();
+    const auto& [_, width, height] = map;
+    HeadQueue newHeads;
+    newHeads.emplace();
+    Cache cache;
+    while (!newHeads.empty()) {
+        auto current = newHeads.top();
+        const auto& [pos, _0, c, _1] = current;
+        if (pos.first == width - 1 && pos.second == height - 1) {
+            v = c;
+            break;
+        }
+        newHeads.pop();
+        for (const auto& n : next2(map, current)) {
+            if (const auto& [it, ok] = cache.insert(id(n)); ok)
+                newHeads.push(n);
+        }
+    }
+    std::cout << v << std::endl;
 }
 
 int main() {
