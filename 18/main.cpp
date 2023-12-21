@@ -4,11 +4,10 @@
 #include <fstream>
 #include <iostream>
 #include <sstream>
-#include <vector>
 
-using Vec = std::pair<int32_t, int32_t>;
+using Vec = std::pair<int64_t, int64_t>;
 
-Vec operator*(const Vec& v, int32_t l) {
+Vec operator*(const Vec& v, int64_t l) {
     return {v.first * l, v.second * l};
 }
 
@@ -22,10 +21,10 @@ Vec& operator+=(Vec& v1, const Vec& v2) {
 }
 
 enum class Dir {
-    U,
+    R,
     D,
     L,
-    R
+    U
 };
 
 Dir toDir(const char c) {
@@ -62,14 +61,14 @@ void part1() {
     std::ifstream ifs("../../18/input.txt");
     std::string line;
     Vec pos{}, prev{};
-    int32_t border{};
-    int32_t area{};
+    int64_t border{};
+    int64_t area{};
     while (std::getline(ifs, line)) {
         if (line.empty())
             continue;
         std::stringstream ss(line);
         char dir;
-        int32_t l;
+        int64_t l;
         std::string col;
         ss >> dir >> l >> col;
         const auto dirVec = toVec(toDir(dir));
@@ -84,6 +83,29 @@ void part1() {
 }
 
 void part2() {
+    std::ifstream ifs("../../18/input.txt");
+    std::string line;
+    Vec pos{}, prev{};
+    int64_t border{};
+    int64_t area{};
+    while (std::getline(ifs, line)) {
+        if (line.empty())
+            continue;
+        std::stringstream ss(line);
+        char dir;
+        int64_t l;
+        std::string col;
+        ss >> dir >> l >> col;
+        l = std::strtoll(col.substr(2, 5).c_str(), nullptr, 16);
+        const auto dirVec = toVec(static_cast<Dir>(col[7] - '0'));
+        pos += (dirVec * l);
+        border += l;
+        area += (prev.first * pos.second - pos.first * prev.second);
+        prev = pos;
+    }
+    area >>= 1;
+    const auto result = area + (border / 2) + 1;
+    std::cout << result << std::endl;
 }
 
 int main() {
