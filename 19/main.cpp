@@ -1,7 +1,8 @@
-#include <algorithm>
+#include <array>
 #include <cassert>
 #include <fstream>
 #include <iostream>
+#include <numeric>
 #include <optional>
 #include <regex>
 #include <sstream>
@@ -108,7 +109,69 @@ void part1() {
     std::cout << v << std::endl;
 }
 
+using FlowValues = std::unordered_map<char, std::pair<uint64_t, uint64_t>>;
+using FlowRule = std::tuple<char, char, uint64_t, std::string>;
+using FlowRules = std::vector<FlowRule>;
+using Flow = std::unordered_map<std::string, FlowRules>;
+
+Flow parseInput2() {
+    std::ifstream ifs("../../19/input.txt");
+    std::string line;
+    Flow flow;
+    while (std::getline(ifs, line)) {
+        if (line.empty())
+            continue;
+        std::smatch res;
+        if (std::regex_match(line, res, ruleRegex)) {
+            const std::string label = res[1];
+            const std::string def = res[res.size() - 1];
+            const std::string rules = res[2];
+            std::string str;
+            std::stringstream ss(rules);
+            while (std::getline(ss, str, ',')) {
+                const auto s = str.front();
+                const auto p0 = str.find_first_of("<>");
+                const char op = str[p0];
+                const auto p1 = str.find(':');
+                const auto v = std::strtol(str.substr(p0 + 1, p1 - p0 - 1).c_str(), nullptr, 10);
+                const auto n = str.substr(p1 + 1);
+                flow[label].emplace_back(op, s, v, n);
+            }
+            flow[label].emplace_back('.', '.', 0, def);
+        }
+    }
+    return flow;
+}
+
+uint64_t traverse(const Flow& flow, const FlowRules& flowRules, const FlowValues& flowValues) {
+    uint64_t val{};
+    auto nextValues = flowValues;
+    for (const auto& [op, s, v, n] : flowRules) {
+        const auto [oLb, oUb] = nextValues[s];
+        auto& [lb, ub] = nextValues[s];
+        if (op == '<')
+            ub = std::min(ub, v - 1);
+        else if (op == '>')
+            lb = std::max(lb, v + 1);
+        if (n == "A")
+            val += std::accumulate(nextValues.begin(), nextValues.end(), static_cast<uint64_t>(1), [](uint64_t acc, const auto& kv) { const auto& [l, u] = kv.second; return acc * (1+u-l); });
+        else if (n != "R")
+            val += traverse(flow, flow.at(n), nextValues);
+        if (op == '<') {
+            lb = ub + 1;
+            ub = oUb;
+        } else if (op == '>') {
+            ub = lb - 1;
+            lb = oLb;
+        }
+    }
+    return val;
+}
+
 void part2() {
+    const auto& flow = parseInput2();
+    FlowValues init{{'x', {1, 4000}}, {'m', {1, 4000}}, {'a', {1, 4000}}, {'s', {1, 4000}}};
+    std::cout << traverse(flow, flow.at("in"), init) << std::endl;
 }
 
 int main() {
