@@ -177,32 +177,12 @@ void part2() {
     replaceS(map, start, width, height);
     for (int y = 0; y < height; y++) {
         bool inside = false;
-        char edgeStart{};
-
         for (int x = 0; x < width; x++) {
             c = map[x + y * width];
-            if (c == 'L' || c == 'F') {
-                edgeStart = c;
-            } else if (edgeStart != 0 && c == 'J' || c == '7') {
-                switch (edgeStart) {
-                case 'L':
-                    inside = c == 'J' == inside;
-                    break;
-                case 'F':
-                    inside = c == '7' == inside;
-                    break;
-                default:
-                    assert(false);
-                }
-                edgeStart = 0;
-            } else {
-                if (edgeStart == 0) {
-                    if (c != '.')
-                        inside = !inside;
-                    if (c == '.' && inside)
-                        cnt++;
-                }
-            }
+            if (c == '.')
+                cnt += inside;
+            else if (c == '|' || c == 'L' || c == 'J')
+                inside = !inside;
         }
     }
     std::cout << cnt << std::endl;
